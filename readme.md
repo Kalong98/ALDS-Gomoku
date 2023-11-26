@@ -1,0 +1,1 @@
+Repository is used for the ALDS agent for Gomoku
