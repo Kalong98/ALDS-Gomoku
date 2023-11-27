@@ -151,6 +151,7 @@ from gomoku_ai_random_webclient import gomoku_ai_random_webclient
 from basePlayer import basePlayer
 from GmGame import GmGame
 from GmQuickTests import GmQuickTests
+from myagent import SupremePlayer
 
 # player gives an implementation the basePlayer cl
 class randomPlayer(basePlayer):
@@ -220,17 +221,18 @@ random.seed(0) # voor reproduceerbare debugging
 
 humanPlayer1 = humanPlayer()
 humanPlayer2 = humanPlayer()
+humanPlayer3 = SupremePlayer()
 
-aiPlayer3 = randomPlayer()
+aiPlayer0 = randomPlayer()
 aiPlayer1 = gomoku_ai_marius1_webclient(True,GmGameRules.winningSeries,GmGameRules.BOARDWIDTH)
 aiPlayer2 = gomoku_ai_marius_tng_webclient(True,GmGameRules.winningSeries,GmGameRules.BOARDWIDTH)
 aiPlayer3 = gomoku_ai_marius_tng_webclient(True,GmGameRules.winningSeries,GmGameRules.BOARDWIDTH)
 #aiPlayer1 = gomoku_ai_random_webclient(True,GmGameRules.winningSeries,GmGameRules.BOARDWIDTH)
 
 # uncomment the line below to test again yourself as human (player1 is black and starts the game)
-GmGame.start(player1=aiPlayer3,player2=aiPlayer2,max_time_to_move=1000,showIntermediateMoves=True) # don't speciry an aiPlayer for Human vs Human games
+# GmGame.start(player1=humanPlayer3,player2=aiPlayer2,max_time_to_move=1000,showIntermediateMoves=True) # don't speciry an aiPlayer for Human vs Human games
 
 # Uncomment the line below to run some simple tests for quick analysis and debugging.
 # Important: before starting the GmQuickTests, make sure to set SIZE=7 in gomoku.py.
-#GmQuickTests.doAllTests(aiPlayer2)
+GmQuickTests.doAllTests(aiPlayer0)
 
