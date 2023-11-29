@@ -16,23 +16,28 @@ class treeNode:
         self.visited = []
         self.Q = 0  # number of wins
         self.N = 0  # number of visits
-
-        self.finished = GmUtils.isWinningMove(last_move, gamestate[0])
+        if (last_move != ()):
+            self.finished = GmUtils.isWinningMove(last_move, gamestate[0])
+        else:
+            self.finished = False
         
     def fully_expanded(self):
-        return len(self.children) is len(self.valid_moves)
+        return len(self.children) == len(self.valid_moves)
 
-    def calculateUCB(self):
-        win_ratio = self.Q / self.N
-        c = 1 / math.sqrt(2)
-        res = win_ratio + c * math.sqrt(math.log2(self.parent.N) / self.N)
-        return res
+    def calculateUCT(self):
+        if self.N > 0:
+            win_ratio = self.Q / self.N
+            c = 1 / math.sqrt(2)
+            res = win_ratio + c * math.sqrt(math.log2(self.parent.N) / self.N)
+            return res
+        else:
+            return 0
 
     def FindBestChild(self):
         best_child = random.choice(self.children)
-        best_value = best_child.calculateUCB()
+        best_value = best_child.calculateUCT()
         for child in self.children:
-            child_UCB = child.calculateUCB()
+            child_UCB = child.calculateUCT()
             if child_UCB > best_value:
                 best_value = child_UCB
                 best_child = child
@@ -107,14 +112,15 @@ class SupremePlayer:
         3) the available moves you can play (this is a special service we provide ;-) )
         4) the maximum time until the agent is required to make a move in milliseconds [diverging from this will lead to disqualification].
         """
-        print (state)
-        max_time = (max_time_to_move / 1000) - 0.05
+        max_time = (max_time_to_move / 1000) - 0.1
         start_time = time.perf_counter()
         time_elapsed = time.perf_counter() - start_time
         valid_moves = gomoku.valid_moves(state)
+        if len(valid_moves) == 1:
+            return valid_moves[0]
         root = treeNode(state, last_move, valid_move_list=valid_moves)
+        n_rollouts = 20
         while time_elapsed < max_time:
-            n_rollouts = 100
             leaf = root.FindSpotToExpand()
             if self.black:
                 for i in range(n_rollouts):
@@ -129,11 +135,11 @@ class SupremePlayer:
     def id(self) -> str: # Done
         return "Ka Long Yang (1676436)"
     
-    start_time = time.perf_counter()
-    print(start_time)
-    time.sleep(1.3)
-    stop_time = time.perf_counter()
-    print(stop_time)
-    time.sleep(1.3)
-    stop_time = time.perf_counter()
-    print(stop_time)
+    # start_time = time.perf_counter()
+    # print(start_time)
+    # time.sleep(1.3)
+    # stop_time = time.perf_counter()
+    # print(stop_time)
+    # time.sleep(1.3)
+    # stop_time = time.perf_counter()
+    # print(stop_time)

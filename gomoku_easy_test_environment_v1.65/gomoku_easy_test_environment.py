@@ -230,9 +230,9 @@ aiPlayer3 = gomoku_ai_marius_tng_webclient(True,GmGameRules.winningSeries,GmGame
 #aiPlayer1 = gomoku_ai_random_webclient(True,GmGameRules.winningSeries,GmGameRules.BOARDWIDTH)
 
 # uncomment the line below to test again yourself as human (player1 is black and starts the game)
-# GmGame.start(player1=humanPlayer3,player2=aiPlayer2,max_time_to_move=1000,showIntermediateMoves=True) # don't speciry an aiPlayer for Human vs Human games
+GmGame.start(player1=aiPlayer3,player2=aiPlayer2,max_time_to_move=1000,showIntermediateMoves=True) # don't speciry an aiPlayer for Human vs Human games
 
 # Uncomment the line below to run some simple tests for quick analysis and debugging.
 # Important: before starting the GmQuickTests, make sure to set SIZE=7 in gomoku.py.
-GmQuickTests.doAllTests(aiPlayer0)
+# GmQuickTests.doAllTests(humanPlayer3)
 
