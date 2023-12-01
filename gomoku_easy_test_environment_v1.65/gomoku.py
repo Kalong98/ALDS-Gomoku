@@ -14,7 +14,7 @@ GameState = Tuple[Board, int]  # The board plus the ply number.
 Move = Tuple[int, int]  # location on the board: (row, col)
 # NB: Don't worry about the warnings; nested types are still very buggy in Python type checking
 
-SIZE=19
+SIZE=7
 def starting_state(bsize_: int = SIZE) -> GameState:
     """
     Creates a new game (start state of the game) as a square 2-dimensional numpy array of bytes (int8)

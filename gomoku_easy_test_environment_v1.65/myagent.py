@@ -1,8 +1,10 @@
 import random, sys, time, copy, math
 import gomoku
+import numpy as np
 from GmUtils import GmUtils
 from GmGameRules import GmGameRules
 from GmGame import GmGame
+
 
 class treeNode:
     def __init__(self, gamestate: gomoku.GameState, last_move = None, parentNode = None, valid_move_list = None):
@@ -28,7 +30,7 @@ class treeNode:
         if self.N > 0:
             win_ratio = self.Q / self.N
             c = 1 / math.sqrt(2)
-            res = win_ratio + c * math.sqrt(math.log2(self.parent.N) / self.N)
+            res = win_ratio + (c * (math.sqrt(math.log2(self.parent.N) / self.N)))
             return res
         else:
             return 0
@@ -112,14 +114,39 @@ class SupremePlayer:
         3) the available moves you can play (this is a special service we provide ;-) )
         4) the maximum time until the agent is required to make a move in milliseconds [diverging from this will lead to disqualification].
         """
-        max_time = (max_time_to_move / 1000) - 0.1
+        max_time = (max_time_to_move / 1000) - 0.2
         start_time = time.perf_counter()
         time_elapsed = time.perf_counter() - start_time
         valid_moves = gomoku.valid_moves(state)
+        # if there is only one available move (start)
         if len(valid_moves) == 1:
             return valid_moves[0]
+        # check for winning move
+        player = 0
+        winning_move = None
+        print(state[0])
+        if self.black:
+            player = GmGame.BLACK
+        else:
+            player = GmGame.WHITE
+        winning_move = self.check_for_winning_move(state, player)
+        if winning_move is not None:
+            # print(f'own winning move {winning_move}')
+            print(f'time_elapsed: {time_elapsed}')
+            return winning_move
+        # check and blocks opponent winning move
+        if self.black:
+            player = GmGame.WHITE
+        else:
+            player = GmGame.BLACK
+        winning_move = self.check_for_winning_move(state, player)
+        if winning_move is not None:
+            # print(f'enemy winning move {winning_move}')
+            print(f'time_elapsed: {time_elapsed}')
+            return winning_move
+        # use MCTS if no easy move
         root = treeNode(state, last_move, valid_move_list=valid_moves)
-        n_rollouts = 20
+        n_rollouts = 50
         while time_elapsed < max_time:
             leaf = root.FindSpotToExpand()
             if self.black:
@@ -130,11 +157,117 @@ class SupremePlayer:
                     leaf.Rollout(GmGame.WHITE)
             time_elapsed = time.perf_counter() - start_time
         best_root_child = root.FindBestChild()
-        return  best_root_child.last_move
+        print(f'time_elapsed: {time_elapsed}')
+        return best_root_child.last_move
 
     def id(self) -> str: # Done
         return "Ka Long Yang (1676436)"
     
+    def check_for_winning_move(self, state: gomoku.GameState, player):
+        board = state[0]
+        bsize = np.shape(state[0])[0] - 1
+        # check horizontal
+        winningmove = self.check_for_winning_move_hor(board, bsize, player)
+        if winningmove is not None:
+            # print(board)
+            # print(f'winningmove hor: {winningmove}')
+            return winningmove
+        winningmove = self.check_for_winning_move_vert(board, bsize, player)
+        if winningmove is not None:
+            # print(board)
+            # print(f'winningmove vert: {winningmove}')
+            return winningmove
+        winningmove = self.check_for_winning_move_diag(board, bsize, player)
+        if winningmove is not None:
+            # print(board)
+            # print(f'winningmove diag: {winningmove}')
+            return winningmove
+        return None
+        
+    def check_for_winning_move_hor(self, board, bsize, player):
+        for row in range(bsize):
+            for col in range(bsize):
+                in_row = 0
+                empty_count = 0
+                empty_space = ()
+                if col + 4 <= bsize:
+                    for i in range(5):
+                        if board[row][col+i] == player:
+                            in_row += 1
+                        elif board[row][col+i] != 0: # spot taken by opponent
+                            break
+                        else:
+                            empty_count += 1
+                            empty_space = (row, col+i)
+                            if empty_count > 1:
+                                break
+                    if in_row == 4 and empty_count == 1:
+                        return empty_space
+        return None
+    
+    def check_for_winning_move_vert(self, board, bsize, player):
+        for col in range(bsize):
+            for row in range(bsize):
+                in_row = 0
+                empty_count = 0
+                empty_space = ()
+                if row + 4 <= bsize:
+                    for i in range(5):
+                        if board[row+i][col] == player:
+                            in_row += 1
+                        elif board[row+i][col] != 0:
+                            break
+                        else:
+                            empty_count += 1
+                            empty_space = (row+i, col)
+                            if empty_count > 1:
+                                break
+                    if in_row == 4 and empty_count == 1:
+                        return empty_space
+        return None
+    
+    def check_for_winning_move_diag(self, board, bsize, player):
+        # check from top left to bottom right
+        for row in range(bsize):
+            for col in range(bsize):
+                in_row = 0
+                empty_count = 0
+                empty_space = ()
+                if row + 4 <= bsize and col + 4 <= bsize:
+                    for i in range(5):
+                        if board[row+i][col+i] == player:
+                            in_row += 1
+                        elif board[row+i][col+i] != 0:
+                            break
+                        else:
+                            empty_count += 1
+                            empty_space = (row+i, col+i)
+                            if empty_count > 1:
+                                break
+                    if in_row == 4 and empty_count == 1:
+                        return empty_space
+        # check from bottom left to top right
+        for row in range(bsize, 0, -1):
+            for col in range(bsize, 0, -1):
+                in_row = 0
+                empty_count = 0
+                empty_space = ()
+                # check if it stays in a positive index
+                if row - 4 >= 0 and col - 4 >= 0:
+                    for i in range(5):
+                        if board[row-i][col-i] == player:
+                            in_row += 1
+                        elif board[row-i][col-i] != 0:
+                            break
+                        else:
+                            empty_count += 1
+                            empty_space = (row-i, col-i)
+                            if empty_count > 1:
+                                break
+                    if in_row == 4 and empty_count == 1:
+                        return empty_space
+        return None
+
     # start_time = time.perf_counter()
     # print(start_time)
     # time.sleep(1.3)
